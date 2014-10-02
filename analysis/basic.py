@@ -8,6 +8,7 @@ from widgets import h5Item
 from util import pgplot
 import smooth
 import auxfuncs as aux
+import funcsDE
 
 
 def baseline(browser):
@@ -191,6 +192,7 @@ def custom_func(browser):
     'results' list in the forms ['name', data_to_be_stored, data_attributes]
     """
 
+
     # Get data and widgets
     plotWidget = browser.ui.dataPlotsWidget
     toolsWidget = browser.ui.toolStackedWidget
@@ -205,18 +207,28 @@ def custom_func(browser):
         attrs = item.attrs
         
         # USER DEFINED TRANSFORMATION
-        USER_TRANSFORMED_DATA = item.data    
+        USER_TRANSFORMED_DATA = item.data
+        pos=[]
+        for t in range(len(USER_TRANSFORMED_DATA)):
+            ard=funcsDE.mapv2a(USER_TRANSFORMED_DATA[t])
+            #print ard
+            blen=funcsDE.mapa2b(ard)
+            #print blen
+            pos.append(blen)
 
         # Append to storage list
-        results.append(['NAME', USER_TRANSFORMED_DATA, attrs])
+        #results.append(['NAME', USER_TRANSFORMED_DATA, attrs])
+        results.append(['position', pos, attrs])
+        print "results.append"
         
         # Plot modified trace if needed
-        x = np.arange(0, len(USER_TRANSFORMED_DATA)*dt, dt)
-        plotWidget.plot(x, USER_TRANSFORMED_DATA, pen=pg.mkPen('#F2EF44', width=1))
-
+        #x = np.arange(0, len(USER_TRANSFORMED_DATA)*dt, dt)
+        #plotWidget.plot(x, USER_TRANSFORMED_DATA, pen=pg.mkPen('#F2EF44', width=1))
+        x = np.arange(0, len(pos)*dt, dt)
+        plotWidget.plot(x, pos, pen=pg.mkPen('#F2EF44', width=1))
     # Store results
     aux.save_results(browser, 'Analysis_results', results)            
-
+    print "custom ran"
     
     
     
