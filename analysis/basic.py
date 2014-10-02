@@ -170,11 +170,11 @@ def smooth_traces(browser):
         attrs['smooth_window_length'] = window_len
         
         # Smooth
-        traceSmooth = smooth.smooth(data[t], window_len=window_len, window=window)
+        traceSmooth = smooth.smooth(item.data, window_len=window_len, window=window)
         results.append([item.text(0), traceSmooth, attrs])
         
         # Plot smoothed trace
-        x = np.arange(0, len(traceSmooth)*item.dt, item.dt)
+        x = np.arange(0, len(traceSmooth)*item.attrs['dt'], item.attrs['dt'])
         plotWidget.plot(x, traceSmooth, pen=pg.mkPen('#F2EF44', width=1))
 
     # Store results

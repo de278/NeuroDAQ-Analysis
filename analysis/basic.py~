@@ -169,7 +169,7 @@ def smooth_traces(browser):
         attrs['smooth_window_length'] = window_len
         
         # Smooth
-        traceSmooth = smooth.smooth(data[t], window_len=window_len, window=window)
+        traceSmooth = smooth.smooth(item.data, window_len=window_len, window=window)
         results.append([item.text(0), traceSmooth, attrs])
         
         # Plot smoothed trace

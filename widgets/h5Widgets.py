@@ -19,6 +19,7 @@ class h5Item(QtGui.QTreeWidgetItem):
         self.originalIndex = None
         self.data = None
         self.attrs = {}
+        self.attrs['dt'] = 1
         
     def set_name(self, name):
         self.name = name
