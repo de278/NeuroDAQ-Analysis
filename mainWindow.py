@@ -1,23 +1,24 @@
 # Setup main interface
 #
-# Widgets and layouts are created by browser.py, generated using Qt Designer
-# and pyuic4 to convert to .py 
+# Widgets and layouts are created by gui.py
 #
 # T.Branco @ MRC-LMB 2014
 # -----------------------------------------------------------------------------
-# /home/tiago/Code/py/NeuroDAQanalysis/testData
 
 import sys, os, re, copy
 
 import h5py
 import sip
 import numpy as np
+
+sip.setapi('QString', 2)
+sip.setapi('QVariant', 2)
 from PyQt4 import QtGui, QtCore
 
 from gui import Ui_MainWindow
 from widgets import h5Item
 from util import h5, mplplot, treefun, table, pgplot
-from analysis import toolselector, eventdetection
+from analysis import toolselector, eventdetection, auxfuncs
 
 import pyqtgraph as pg
 
@@ -113,9 +114,9 @@ class NeuroDaqWindow(QtGui.QMainWindow):
         self.ui.propsTableWidget.setItem(1,0,self.ui.workingDataTree.propsItemDescription)
         self.ui.propsTableWidget.cellChanged.connect(self.updateTableEntry)        
         
-        # Data table tab
+        # IPython tab
         # -----------------------------------------------------------------------------        
- 
+        self.ui.IPythonWidget.pushVariables({'browser': self, 'aux': auxfuncs, 'dataTree': self.ui.workingDataTree, 'dataPlot': self.ui.dataPlotsWidget})
 
         # Plots tab
         # ----------------------------------------------------------------------------- 
