@@ -29,8 +29,8 @@ class h5Item(QtGui.QTreeWidgetItem):
         """ Reimplement sorting function to sort numbers properly
         """
         column = self.treeWidget().sortColumn()
-        item1 = str(self.text(column).toLower())
-        item2 = str(otherItem.text(column).toLower())
+        item1 = str(self.text(column) #.toLower())
+        item2 = str(otherItem.text(column) #.toLower())
         
         # Check if there are numbers in both strings to be sorted
         s1 = re.search(r"\d+(\.\d+)?", item1)  # this returns numbers if they exist

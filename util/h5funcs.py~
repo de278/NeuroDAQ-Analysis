@@ -48,7 +48,7 @@ def load_h5(browser, tree, push):
         browser.ui.workingDataTree.setHeaderLabels([os.path.split(currentFile)[1]])
         browser.ui.workingDataTree.setSortingEnabled(False)  # Otherwise it screws up drag and drop
 
-def populate_h5tree(browser, parent, parentWidget, push):
+def populate_h5tree(browser, parent, parentWidget, push):   
     if isinstance(parent, h5py.Group):
         for child in parent:
             #print parent[child]
@@ -58,12 +58,14 @@ def populate_h5tree(browser, parent, parentWidget, push):
             populate_h5tree(browser, parent[child], item, push)
     elif isinstance(parent, h5py.Dataset):
         set_attrs(parent, parentWidget)
-        print parent.attrs['dt']
-        if push:            
-            parentWidget.listIndex = len(browser.ui.workingDataTree.dataItems)
-            #browser.ui.workingDataTree.data.append(parent[:])
-            parentWidget.data = parent[:]
-            browser.ui.workingDataTree.dataItems.append(parentWidget)
+        if push:
+            try:
+                parentWidget.data = parent[:]            
+                parentWidget.listIndex = len(browser.ui.workingDataTree.dataItems)
+                #browser.ui.workingDataTree.data.append(parent[:])            
+                browser.ui.workingDataTree.dataItems.append(parentWidget)
+            except ValueError:
+                sip.delete(parentWidget.parent())
 
 
 def populate_h5File(browser, parent, parentWidget):

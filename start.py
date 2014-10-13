@@ -1,3 +1,6 @@
 import mainWindow as m
-m.main()
 
+global browser
+
+if __name__ == '__main__':
+    browser = m.main() 

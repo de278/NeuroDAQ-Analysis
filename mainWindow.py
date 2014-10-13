@@ -18,9 +18,16 @@ from PyQt4 import QtGui, QtCore
 from gui import Ui_MainWindow
 from widgets import h5Item
 from util import h5, mplplot, treefun, table, pgplot
+<<<<<<< HEAD
 from analysis import toolselector, eventdetection, auxfuncs
+=======
+from analysis import toolselector, auxfuncs, template
+from console import utils as utilsconsole
+>>>>>>> upstream/master
 
 import pyqtgraph as pg
+from analysis.modules import *
+from analysis import moduleLoader
 
 class NeuroDaqWindow(QtGui.QMainWindow):
     """ Assembles the main NeuroDAQ user interface.
@@ -57,6 +64,24 @@ class NeuroDaqWindow(QtGui.QMainWindow):
         self.currentSaveFile = []
         self.currentFolder = []
 
+        # Share instance with other modules by setting global variable browser
+        utilsconsole.set_browser(self)
+
+        # Load custom analysis modules
+        self.customToolSelector  = toolselector.ToolSelector()        
+        for module in dir(moduleLoader):               
+            try:    
+                sys.modules['analysis.modules.'+module].AnalysisModule(self)
+                #print dir(m)
+                #if hasattr(m, 'AnalysisModule'): 
+                #    m.AnalysisModule(self)   
+                #    print 'Loaded module', m
+            except KeyError:
+                pass
+            except:    
+                print module, sys.exc_info()
+
+
         # Directory browser
         # -----------------------------------------------------------------------------
         self.ui.dirTree.selectionModel().selectionChanged.connect(self.load_h5_OnSelectionChanged)
@@ -71,11 +96,15 @@ class NeuroDaqWindow(QtGui.QMainWindow):
         # Analysis selection list
         # -----------------------------------------------------------------------------
         self.ui.oneDimToolSelect.selectionModel().selectionChanged.connect(self.select_analysisTool)
+        self.ui.customToolSelect.selectionModel().selectionChanged.connect(self.select_analysisTool)
+        self.selectionList = []
+        self.selectionList.append([self.ui.oneDimToolSelect, self.ui.oneDimToolStackedWidget, '1D Analysis'])
+        self.selectionList.append([self.ui.customToolSelect, self.ui.customToolStackedWidget, 'Custom Analysis'])
 
         # Analysis tools stack
         # -----------------------------------------------------------------------------
-        self.ui.toolStackedWidget.eventCutOut.clicked.connect(self.event_cutOut)
-        self.ui.toolStackedWidget.eventThreshold.toggled.connect(self.event_showThresholdCursor)        
+        #self.ui.oneDimToolStackedWidget.eventCutOut.clicked.connect(self.event_cutOut)
+        #self.ui.oneDimToolStackedWidget.eventThreshold.toggled.connect(self.event_showThresholdCursor)        
 
         # Working data tree
         # -----------------------------------------------------------------------------
@@ -116,13 +145,19 @@ class NeuroDaqWindow(QtGui.QMainWindow):
         
         # IPython tab
         # -----------------------------------------------------------------------------        
+<<<<<<< HEAD
         self.ui.IPythonWidget.pushVariables({'browser': self, 'aux': auxfuncs, 'dataTree': self.ui.workingDataTree, 'dataPlot': self.ui.dataPlotsWidget})
+=======
+        self.ui.IPythonWidget.pushVariables({'browser': self, 'aux': auxfuncs, 'dataTree': self.ui.workingDataTree,
+                                    'dataPlot': self.ui.dataPlotsWidget, 'ndaq': utilsconsole})
+>>>>>>> upstream/master
 
         # Plots tab
         # ----------------------------------------------------------------------------- 
         self.ui.actionPlotData.triggered.connect(self.plot_selected)
         self.ui.actionShowCursors.triggered.connect(self.show_cursors)
         self.ui.actionAnalyseData.triggered.connect(self.analyse_data)
+
 
 
     # -----------------------------------------------------------------------------
@@ -301,28 +336,25 @@ class NeuroDaqWindow(QtGui.QMainWindow):
     # Analysis Methods
     # -----------------------------------------------------------------------------
     def select_analysisTool(self):
-        index = self.ui.oneDimToolSelect.selectedIndexes()[0]
-        self.ui.toolStackedWidget.setCurrentIndex(index.row())
-        return index
+        i = self.ui.selectionTabWidget.currentIndex()
+        for item in self.selectionList:
+            if item[2]==self.ui.selectionTabWidget.tabText(i):  # get the widgets that belong to the selected tab
+                toolSelectWidget = item[0]
+                toolStackedWidget = item[1]                
+        index = toolSelectWidget.selectedIndexes()[0]
+    
+        # Display the matching stack in the stacked widget
+        selectedItemName = toolSelectWidget.model.itemFromIndex(index).text()
+        for w in toolStackedWidget.widgetList:
+            if w[0]==selectedItemName: toolStackedWidget.setCurrentIndex(w[1])
+        return index        
 
     def analyse_data(self):
         index = self.select_analysisTool()
         if index:
-            tool = index.data().toString()
-            toolselector.toolselector(self, tool)
-
-    def event_cutOut(self):
-        eventdetection.event_cut(self)
-        
-    def event_showThresholdCursor(self):
-        if self.ui.toolStackedWidget.eventThreshold.isChecked():
-            pgplot.show_thresholdCursor(self, self.ui.dataPlotsWidget)
-        else:
-            pgplot.hide_thresholdCursor(self, self.ui.dataPlotsWidget)
-
-    def event_updateThreshold(self):
-        self.ui.dataPlotsWidget.cursorThsPos = round(self.ui.dataPlotsWidget.cursorThs.value(),2)
-        self.ui.toolStackedWidget.eventThresholdDisplay.setText(str(self.ui.dataPlotsWidget.cursorThsPos))
+            tool = index.data() #.toString()
+            #toolselector.toolselector(self, tool)
+            self.customToolSelector.tool_select(self, tool)
 
     # -----------------------------------------------------------------------------
     # Properties Methods
@@ -344,7 +376,10 @@ class NeuroDaqWindow(QtGui.QMainWindow):
     def plot_OnSelectionChanged(self, current, previous):
         if current:
             if 'dataset' in str(self.db[current.path]):
-                pgplot.plot_singleData(self, self.ui.singlePlotWidget, self.db[current.path][:])    
+                try:
+                    pgplot.plot_singleData(self, self.ui.singlePlotWidget, self.db[current.path][:])    
+                except ValueError:
+                    pass
 
     def browse_OnSelectionChanged(self, current, previous):
         if current.data is not None:
@@ -358,7 +393,9 @@ class NeuroDaqWindow(QtGui.QMainWindow):
 
     def plot_selected(self):
         self.ui.actionBrowseData.setChecked(False)
-        pgplot.plot_multipleData(self, self.ui.dataPlotsWidget)   
+        itemList = self.ui.workingDataTree.selectedItems()
+        if itemList:
+            pgplot.plot_multipleData(self, self.ui.dataPlotsWidget, itemList)   
     
     def zoom_out(self):
         pgplot.zoom_out(self, self.ui.dataPlotsWidget)
@@ -373,10 +410,10 @@ class NeuroDaqWindow(QtGui.QMainWindow):
 def main():    
     #defaultFont = QtGui.QFont('Ubuntu', 8) 
     app = QtGui.QApplication(sys.argv)
-    #app.setFont(defaultFont)
-    c = NeuroDaqWindow()
+    #app.setFont(defaultFont)    
+    browser = NeuroDaqWindow()
     sys.exit(app.exec_())
-
+    return browser
 
 if __name__ == '__main__':
     main() 

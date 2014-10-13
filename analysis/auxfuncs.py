@@ -13,6 +13,7 @@ from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
 from widgets import h5Item
 from util import pgplot
+    
 
 def get_data(browser):
     """ Return the data currently plotted.
@@ -52,37 +53,38 @@ def get_cursors(plotWidget):
     #return int(c1/plotWidget.dt), int(c2/plotWidget.dt)
     return int(c1), int(c2)
 
+def make_h5item(name, data, attrs):
+    """ Makes a new h5item for general use 
+    """
+    item = h5Item([name])
+    item.data = data
+    item.attrs = attrs
+    return item
 
 def make_data_copy(browser, plotWidget):
     """ Make a copy of the currently plotted data to work on, 
     in order to keep the original data intact. Add new items
-    to the working data tree and plot them, so that plotDataIndex
-    is updated.
+    to the working data tree and plot them. 
     """
-    plotWidget.clear()
-    newPlotDataIndex = []
-    data = get_data(browser)
-    dataIndex = plotWidget.plotDataIndex   
-    item = h5Item(['Baselined_traces'])
+    plotWidget.clear() 
+    parentText = plotWidget.plotDataItems[0].parent().text(0)
+    item = h5Item([parentText+'_copy'])
     parentWidget = browser.ui.workingDataTree.invisibleRootItem()
     browser.make_nameUnique(parentWidget, item, item.text(0))
-    browser.ui.workingDataTree.addTopLevelItem(item)     
-    for t in range(len(data)):
+    browser.ui.workingDataTree.addTopLevelItem(item)
+    childrenList = []     
+    for plotItem in plotWidget.plotDataItems:
         # Add items to tree
-        child = h5Item([str(t)])
+        child = h5Item([str(plotItem.text(0))])
         browser.make_nameUnique(item, child, child.text(0))
         item.addChild(child)
-        child.dataIndex =  len(browser.ui.workingDataTree.data)
-        browser.ui.workingDataTree.data.append(browser.ui.workingDataTree.data[dataIndex[t]])   
-        
-        # Plot data copy
-        x = np.arange(0, len(browser.ui.workingDataTree.data[child.dataIndex])*plotWidget.dt, plotWidget.dt)
-        y = browser.ui.workingDataTree.data[child.dataIndex]
-        plotWidget.plot(x, y, pen=pg.mkPen('#3790CC'))
-        newPlotDataIndex.append(child.dataIndex)
-    plotWidget.plotDataIndex = newPlotDataIndex
+        child.attrs = plotItem.attrs
+        child.data = plotItem.data
+        child.listIndex =  len(browser.ui.workingDataTree.dataItems)
+        browser.ui.workingDataTree.dataItems.append(child)  
+        childrenList.append(child)      
+    pgplot.plot_multipleData(browser, plotWidget, childrenList)    
     if browser.ui.actionShowCursors.isChecked(): pgplot.replot_cursors(browser, plotWidget) 
-
 
 def plot_point(plotWidget, cursor1, xpoint, ypoint, dt):
     """ Plots a single point, with the X coordinate measured from the position
@@ -116,3 +118,18 @@ def save_results(browser, parentText, results):
         browser.ui.workingDataTree.dataItems.append(child)
         child.data = result[1]   
     return listIndexes
+
+
+
+    
+
+
+
+
+
+
+
+
+    
+
+

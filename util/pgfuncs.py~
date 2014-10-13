@@ -12,7 +12,7 @@ def plot_singleData(browser, plotWidget, data):
     plotWidget.plot(data, pen=pg.mkPen('#3790CC'))
 
     
-def plot_multipleData(browser, plotWidget):
+def plot_multipleData(browser, plotWidget, itemList):
     """ Plot user-selected traces from the working data tree.
 
     Store the data indexes of the plotted items for use in 
@@ -22,42 +22,35 @@ def plot_multipleData(browser, plotWidget):
     """
     plotWidget.clear()
     plotWidget.plotDataIndex, plotWidget.plotDataItems = [], []
-    items = browser.ui.workingDataTree.selectedItems()
-    if items:
-        for item in items:
-            if item.data is not None:
-                try:
-                    dt = item.attrs['dt']
-                except KeyError:
-                    dt = 1
-                #print 'dt is', dt
-                #x = np.arange(0, len(browser.ui.workingDataTree.data[item.dataIndex])*dt, dt)
-                #y = browser.ui.workingDataTree.data[item.dataIndex]
-                x = np.arange(0, len(item.data)*dt, dt)
-                y = item.data
-                plotWidget.plot(x, y, pen=pg.mkPen('#3790CC'))
-                #plotWidget.plotDataIndex.append(item.dataIndex)
-                plotWidget.plotDataItems.append(item)  # This makes plotDataIndex redundant, change later
+    for item in itemList:
+        if item.data is not None:
+            try:
+                dt = item.attrs['dt']
+            except KeyError:
+                dt = 1
+            x = make_xvector(item.data, dt)     
+            #x = np.arange(0, len(item.data)*dt, dt)
+            y = item.data
+            plotWidget.plot(x, y, pen=pg.mkPen('#3790CC'))
+            plotWidget.plotDataItems.append(item)
 
-def browse_singleData(browser, plotWidget, currentItem):
+def browse_singleData(browser, plotWidget, currentItem, clear=True, color='#3790CC'):
     """ Plot single trace of currentItem.
     Different from plot_singleData because the source is an item
     instead of the data directly.
     """
-    plotWidget.clear()
+    if clear: plotWidget.clear()
     plotWidget.plotDataIndex, plotWidget.plotDataItems = [], []
     if currentItem.data is not None:
         try:
             dt = currentItem.attrs['dt']
         except KeyError:
             dt = 1    
-        #x = np.arange(0, len(browser.ui.workingDataTree.data[currentItem.dataIndex])*dt, dt)
-        #y = browser.ui.workingDataTree.data[currentItem.dataIndex]
-        x = np.arange(0, len(currentItem.data)*dt, dt)
+        x = make_xvector(currentItem.data, dt)    
+        #x = np.arange(0, len(currentItem.data)*dt, dt)
         y = currentItem.data
-        plotWidget.plot(x, y, pen=pg.mkPen('#3790CC'))        
-        #plotWidget.plotDataIndex.append(currentItem.dataIndex)
-        plotWidget.plotDataItems.append(currentItem)  # This makes plotDataIndex redundant, change later
+        plotWidget.plot(x, y, pen=pg.mkPen(color))        
+        plotWidget.plotDataItems.append(currentItem) 
 
 def replot(browser, plotWidget):
     """ Function to replot the data currently in the data plot tab.
@@ -69,9 +62,8 @@ def replot(browser, plotWidget):
             dt = item.attrs['dt']
         except KeyError:
             dt = 1
-        #x = np.arange(0, len(browser.ui.workingDataTree.data[item.dataIndex])*dt, dt)
-        #y = browser.ui.workingDataTree.data[item.dataIndex]
-        x = np.arange(0, len(item.data)*dt, dt)
+        #x = np.arange(0, len(item.data)*dt, dt)
+        x = make_xvector(currentItem.data, dt) 
         y = item.data
         plotWidget.plot(x, y, pen=pg.mkPen('#3790CC'))
               
@@ -117,19 +109,14 @@ def replot_cursors(browser, plotWidget):
     plotWidget.addItem(plotWidget.cursor1)
     plotWidget.addItem(plotWidget.cursor2)     
 
-def show_thresholdCursor(browser, plotWidget):
-    """ Show horizontal cursor to set threshold 
-    for event detection.
-    """
-    plotWidget.cursorThsPos = 0
-    plotWidget.cursorThs = pg.InfiniteLine(pos=plotWidget.cursorThsPos, angle=0, movable=True,
-                                                 pen=pg.mkPen('#FFD000', width=2))
-    plotWidget.addItem(plotWidget.cursorThs)
-    plotWidget.cursorThs.sigPositionChanged.connect(browser.event_updateThreshold)
 
-def hide_thresholdCursor(browser, plotWidget):
-    """ Remove the threshold cursor.
-    """
-    plotWidget.cursorThsPos = []
-    plotWidget.removeItem(plotWidget.cursorThs)
-    
+def make_xvector(ydata, dt):
+    """ Make a X vector to plot data against 
+    and ensure it is has the same lenght as Y
+    """ 
+    x = np.arange(0, len(ydata)*dt, dt)
+    if len(x)<len(ydata):
+        x = np.append(x, dt)
+    elif len(x)>len(ydata):
+        x = np.delete(x, len(x)-1)
+    return x 

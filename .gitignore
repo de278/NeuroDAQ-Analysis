@@ -1,3 +1,16 @@
 *.pyc
 *.py~
-*.pyc
+**/analysis/*.pyc
+**/analysis/*.py~
+**/analysis/modules/*.pyc
+**/analysis/modules/*.py~
+**/console/*.pyc
+**/console/*.py~
+**/import/*.pyc
+**/import/*.py~
+**/util/*.pyc
+**/util/*.py~
+**/widgets/*.pyc
+**/widgets/*.py~
+
+

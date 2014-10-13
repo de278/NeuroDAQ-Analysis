@@ -19,15 +19,4 @@ class AnalysisSelectWidget(QtGui.QListView):
         
     def internal_model(self):
         self.model = QtGui.QStandardItemModel(self)
-        tools = [
-            'Baseline',
-            'Smooth',
-            'Average',
-            'Measure',
-            'Event Detection',
-            'Custom' 
-        ]
-        for tool in tools:
-            item = QtGui.QStandardItem(tool)
-            self.model.appendRow(item)
         self.setModel(self.model)

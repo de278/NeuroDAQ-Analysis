@@ -1,1 +1,1 @@
-import pyqtgraph
+#import pyqtgraph
